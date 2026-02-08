@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary SEO -->
+    <title>Lawyer Direct | On-Demand Legal Help — Connect with Verified Lawyers Instantly</title>
+    <meta name="description" content="Lawyer Direct connects you with verified, licensed attorneys in seconds. AI-powered matching for Family Law, Immigration, Criminal Defense, Real Estate, and more across the US and Canada. First 3 minutes free." />
+    <meta name="keywords" content="lawyer, attorney, legal help, legal advice, on-demand lawyer, find a lawyer, AI legal matching, family law, immigration lawyer, criminal defense, real estate lawyer, contract lawyer, legal consultation, online lawyer" />
+    <meta name="author" content="Lawyer Direct Inc." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://lawyerdirect.com/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://lawyerdirect.com/" />
+    <meta property="og:title" content="Lawyer Direct | On-Demand Legal Help" />
+    <meta property="og:description" content="Connect with verified, licensed attorneys in seconds. AI-powered matching across the US and Canada. First 3 minutes free." />
+    <meta property="og:image" content="https://lawyerdirect.com/assets/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Lawyer Direct" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Lawyer Direct | On-Demand Legal Help" />
+    <meta name="twitter:description" content="Connect with verified, licensed attorneys in seconds. AI-powered matching across the US and Canada. First 3 minutes free." />
+    <meta name="twitter:image" content="https://lawyerdirect.com/assets/og-image.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/logo.png" />
+    <link rel="apple-touch-icon" href="/assets/logo.png" />
+
+    <!-- Theme color -->
+    <meta name="theme-color" content="#4f46e5" />
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- JSON-LD Structured Data: Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Lawyer Direct",
+      "url": "https://lawyerdirect.com",
+      "logo": "https://lawyerdirect.com/assets/logo.png",
+      "description": "On-demand legal help platform connecting people with verified, licensed attorneys across the US and Canada using AI-powered matching.",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "legal@lawyerdirect.com",
+        "contactType": "customer support"
+      },
+      "sameAs": []
+    }
+    </script>
+
+    <!-- JSON-LD Structured Data: WebApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Lawyer Direct",
+      "url": "https://lawyerdirect.com",
+      "applicationCategory": "LegalService",
+      "operatingSystem": "iOS, Android, Web",
+      "description": "AI-powered platform that matches you with licensed attorneys for on-demand legal consultations.",
+      "offers": {
+        "@type": "Offer",
+        "price": "30.00",
+        "priceCurrency": "USD",
+        "description": "20-minute legal consultation with a verified attorney. First 3 minutes free."
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.9",
+        "reviewCount": "2847",
+        "bestRating": "5"
+      }
+    }
+    </script>
+
+    <!-- JSON-LD Structured Data: FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How does Lawyer Direct work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Describe your legal issue in plain language. Our AI identifies the legal category, jurisdiction, and urgency, then matches you with a qualified attorney in seconds."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How much does a consultation cost?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A standard 20-minute consultation costs $30. The first 3 minutes of every session are free so you can assess the fit."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are the lawyers verified?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Every attorney on Lawyer Direct is verified for active bar licensure, good standing, and relevant expertise in their practice area."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What legal categories are available?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "We cover Family Law, Immigration, Criminal Defense, Contract Law, Real Estate, Personal Injury, Employment Law, Intellectual Property, Estate Planning, and more."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        overflow-x: hidden;
+      }
+      h1, h2, h3 {
+        font-family: 'Playfair Display', serif;
+      }
+      /* Smooth scrolling for the whole page */
+      html {
+        scroll-behavior: smooth;
+      }
+      /* Custom utility for perspective */
+      .perspective-1000 {
+        perspective: 1000px;
+      }
+      .preserve-3d {
+        transform-style: preserve-3d;
+      }
+      .backface-hidden {
+        backface-visibility: hidden;
+      }
+    </style>
+
+</head>
+  <body class="bg-slate-50 text-slate-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
