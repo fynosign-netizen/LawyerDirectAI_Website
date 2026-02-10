@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { MessageSquare, ShieldCheck, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -70,14 +71,15 @@ const Hero: React.FC = () => {
           </motion.p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <motion.button 
-              whileHover={{ scale: 1.05, y: -4, boxShadow: "0 20px 25px -5px rgb(79 70 229 / 0.2)" }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
-              className="w-full sm:w-auto px-10 py-5 bg-indigo-600 text-white rounded-2xl font-bold text-lg transition-all shadow-xl shadow-indigo-100"
-            >
-              Start Free Trial
-            </motion.button>
+            <Link to="/register">
+              <motion.button
+                whileHover={{ scale: 1.05, y: -4, boxShadow: "0 20px 25px -5px rgb(79 70 229 / 0.2)" }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full sm:w-auto px-10 py-5 bg-indigo-600 text-white rounded-2xl font-bold text-lg transition-all shadow-xl shadow-indigo-100"
+              >
+                Start Free Trial
+              </motion.button>
+            </Link>
             <motion.button 
               whileHover={{ scale: 1.05, y: -4 }}
               whileTap={{ scale: 0.98 }}

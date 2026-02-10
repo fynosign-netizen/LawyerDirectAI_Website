@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Briefcase, ArrowRight, TrendingUp, Users, Star, DollarSign } from 'lucide-react';
 
@@ -21,14 +22,16 @@ const LawyerCTA: React.FC = () => {
               and connect with clients instantly. Set your own hours and get paid automatically.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-indigo-500/20 transition-all flex items-center justify-center space-x-2"
-              >
-                <span>Join the Network</span>
-                <ArrowRight className="w-5 h-5" />
-              </motion.button>
+              <Link to="/register">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-indigo-500/20 transition-all flex items-center justify-center space-x-2"
+                >
+                  <span>Join the Network</span>
+                  <ArrowRight className="w-5 h-5" />
+                </motion.button>
+              </Link>
               <button className="px-8 py-4 bg-indigo-500/20 text-white border border-indigo-400/30 rounded-xl font-bold text-lg hover:bg-indigo-500/30 transition-all">
                 Learn More
               </button>

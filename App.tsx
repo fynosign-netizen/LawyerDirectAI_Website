@@ -17,6 +17,7 @@ import AppDownload from './components/AppDownload';
 import Pricing from './components/Pricing';
 import LegalDisclaimer from './pages/LegalDisclaimer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
+import Register from './pages/Register';
 
 const LandingPage: React.FC = () => {
   return (
@@ -94,6 +95,7 @@ const App: React.FC = () => {
         <Route path="/" element={<LandingPage />} />
         <Route path="/legal-disclaimer" element={<LegalDisclaimer />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/register" element={<Register />} />
       </Routes>
     </Router>
   );
