@@ -1,72 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { analyzeLegalQuery } from '../services/gemini';
-import { AnalysisResult, Lawyer } from '../types';
-import { Sparkles, Loader2, CheckCircle, ArrowRight, Star, Smartphone, Clock, Shield, Globe, AlertTriangle, RotateCcw } from 'lucide-react';
+import { fetchMatchedLawyers, ApiLawyer } from '../services/api';
+import { AnalysisResult, Lawyer, US_STATES, getStateAbbr, getStateName } from '../types';
+import {
+  Sparkles, Loader2, CheckCircle, ArrowRight, Star, Smartphone,
+  Clock, Shield, Globe, AlertTriangle, RotateCcw, Mic, MicOff,
+  MapPin, Search, ChevronDown, X, Users
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const LAWYERS: Lawyer[] = [
-  {
-    id: '1', name: 'Rebecca Thompson, Esq.', initials: 'RT', title: 'Senior Partner',
-    rating: 4.9, reviews: 347, specialty: 'Family Law', yearsExperience: 18,
-    barNumber: 'NY-284719', responseTime: 'Under 2 min', consultationRate: '$30 / 20 min',
-    languages: ['English', 'Spanish'], online: true,
-  },
-  {
-    id: '2', name: 'David Kim, J.D.', initials: 'DK', title: 'Managing Attorney',
-    rating: 4.8, reviews: 512, specialty: 'Contract Law', yearsExperience: 14,
-    barNumber: 'CA-310482', responseTime: 'Under 5 min', consultationRate: '$30 / 20 min',
-    languages: ['English', 'Korean'], online: true,
-  },
-  {
-    id: '3', name: 'Maria Gonzalez, Esq.', initials: 'MG', title: 'Immigration Counsel',
-    rating: 4.9, reviews: 631, specialty: 'Immigration', yearsExperience: 12,
-    barNumber: 'TX-198254', responseTime: 'Under 3 min', consultationRate: '$30 / 20 min',
-    languages: ['English', 'Spanish', 'Portuguese'], online: true,
-  },
-  {
-    id: '4', name: 'James Okafor, J.D.', initials: 'JO', title: 'Criminal Defense Attorney',
-    rating: 4.7, reviews: 289, specialty: 'Criminal Defense', yearsExperience: 21,
-    barNumber: 'IL-402917', responseTime: 'Under 1 min', consultationRate: '$30 / 20 min',
-    languages: ['English'], online: true,
-  },
-  {
-    id: '5', name: 'Catherine Moreau, Esq.', initials: 'CM', title: 'Real Estate Counsel',
-    rating: 4.8, reviews: 195, specialty: 'Real Estate', yearsExperience: 9,
-    barNumber: 'FL-557013', responseTime: 'Under 4 min', consultationRate: '$30 / 20 min',
-    languages: ['English', 'French'], online: true,
-  },
-  {
-    id: '6', name: 'Andrew Patel, J.D.', initials: 'AP', title: 'Employment Law Partner',
-    rating: 4.9, reviews: 418, specialty: 'Employment Law', yearsExperience: 16,
-    barNumber: 'WA-623841', responseTime: 'Under 2 min', consultationRate: '$30 / 20 min',
-    languages: ['English', 'Hindi'], online: true,
-  },
-  {
-    id: '7', name: 'Lisa Chen, Esq.', initials: 'LC', title: 'IP Litigation Attorney',
-    rating: 4.8, reviews: 173, specialty: 'Intellectual Property', yearsExperience: 11,
-    barNumber: 'CA-448290', responseTime: 'Under 3 min', consultationRate: '$30 / 20 min',
-    languages: ['English', 'Mandarin'], online: false,
-  },
-  {
-    id: '8', name: 'Robert Sinclair, J.D.', initials: 'RS', title: 'Personal Injury Partner',
-    rating: 4.7, reviews: 562, specialty: 'Personal Injury', yearsExperience: 23,
-    barNumber: 'OH-175632', responseTime: 'Under 5 min', consultationRate: '$30 / 20 min',
-    languages: ['English'], online: true,
-  },
-  {
-    id: '9', name: 'Priya Sharma, Esq.', initials: 'PS', title: 'Estate Planning Attorney',
-    rating: 4.9, reviews: 241, specialty: 'Estate Planning', yearsExperience: 10,
-    barNumber: 'NJ-339184', responseTime: 'Under 2 min', consultationRate: '$30 / 20 min',
-    languages: ['English', 'Hindi', 'Punjabi'], online: true,
-  },
-  {
-    id: '10', name: 'Daniel Wright, J.D.', initials: 'DW', title: 'General Practice Attorney',
-    rating: 4.6, reviews: 408, specialty: 'General Inquiry', yearsExperience: 19,
-    barNumber: 'PA-281047', responseTime: 'Under 3 min', consultationRate: '$30 / 20 min',
-    languages: ['English'], online: true,
-  },
-];
 
 const INITIALS_COLORS = [
   'bg-indigo-600', 'bg-emerald-600', 'bg-rose-600', 'bg-amber-600',
@@ -74,19 +16,188 @@ const INITIALS_COLORS = [
   'bg-fuchsia-600', 'bg-slate-700',
 ];
 
+// Map API response to display-friendly Lawyer type
+const mapApiLawyer = (api: ApiLawyer, index: number): Lawyer => {
+  const firstName = api.user.firstName || '';
+  const lastName = api.user.lastName || '';
+  const name = `${firstName} ${lastName}`.trim();
+  const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const rate = api.consultationRate
+    ? `$${(api.consultationRate / 100).toFixed(0)} / 20 min`
+    : '$30 / 20 min';
+
+  return {
+    id: api.id,
+    name: name || 'Attorney',
+    initials: initials || '??',
+    title: api.title || api.specializations?.[0] || 'Attorney',
+    rating: api.rating || 0,
+    reviews: api.totalReviews || 0,
+    specialty: api.specializations?.[0] || 'General',
+    yearsExperience: api.yearsExperience || 0,
+    barNumber: api.barNumber.includes(api.licenseState) ? api.barNumber : `${api.licenseState}-${api.barNumber}`,
+    consultationRate: rate,
+    languages: api.languages?.length ? api.languages : ['English'],
+    online: api.onlineStatus === 'online',
+    onlineStatus: api.onlineStatus,
+    profilePhoto: api.profilePhoto,
+    verified: api.verificationStatus === 'VERIFIED',
+  };
+};
+
+// Web Speech API types
+interface SpeechRecognitionEvent {
+  results: { [index: number]: { [index: number]: { transcript: string } } };
+  resultIndex: number;
+}
+
 const AIDemo: React.FC = () => {
   const [query, setQuery] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [matchedLawyers, setMatchedLawyers] = useState<Lawyer[]>([]);
   const [error, setError] = useState(false);
+  const [fetchingLawyers, setFetchingLawyers] = useState(false);
+
+  // State picker
+  const [needsState, setNeedsState] = useState(false);
+  const [showStatePicker, setShowStatePicker] = useState(false);
+  const [selectedState, setSelectedState] = useState<string | null>(null);
+  const [stateSearch, setStateSearch] = useState('');
+  const [confirmedState, setConfirmedState] = useState<string | null>(null);
+
+  // Voice input
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const isNotRecognized = result?.category === 'Not Recognized';
 
+  // Check for Web Speech API support
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    setSpeechSupported(!!SpeechRecognition);
+  }, []);
+
+  const startListening = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+
+      for (let i = event.resultIndex; i < Object.keys(event.results).length; i++) {
+        const result = event.results[i];
+        if (result[0]) {
+          const transcript = result[0].transcript;
+          if ((result as any).isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+      }
+
+      if (finalTranscript) {
+        setQuery(prev => prev + (prev ? ' ' : '') + finalTranscript);
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    setIsListening(false);
+  };
+
+  const toggleVoice = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
+  // Fetch lawyers from real API
+  const loadLawyers = async (category: string, stateAbbr: string | null) => {
+    setFetchingLawyers(true);
+    try {
+      // Try exact specialization + state match first
+      let apiLawyers = await fetchMatchedLawyers({
+        specialization: category,
+        state: stateAbbr || undefined,
+        available: true,
+        limit: 5,
+      });
+
+      // Fallback: just state match if no specialization match
+      if (apiLawyers.length === 0 && stateAbbr) {
+        apiLawyers = await fetchMatchedLawyers({
+          state: stateAbbr,
+          available: true,
+          limit: 5,
+        });
+      }
+
+      // Fallback: just specialization match if still nothing
+      if (apiLawyers.length === 0) {
+        apiLawyers = await fetchMatchedLawyers({
+          specialization: category,
+          available: true,
+          limit: 5,
+        });
+      }
+
+      // Final fallback: any available lawyers
+      if (apiLawyers.length === 0) {
+        apiLawyers = await fetchMatchedLawyers({
+          available: true,
+          limit: 5,
+        });
+      }
+
+      const mapped = apiLawyers.map((l, i) => mapApiLawyer(l, i));
+      // Sort online first
+      mapped.sort((a, b) => (b.online ? 1 : 0) - (a.online ? 1 : 0));
+      setMatchedLawyers(mapped);
+    } catch (err) {
+      console.error('Failed to fetch lawyers from API:', err);
+      setMatchedLawyers([]);
+    } finally {
+      setFetchingLawyers(false);
+    }
+  };
+
   const handleAnalysis = async () => {
     if (!query.trim()) return;
+    if (isListening) stopListening();
     setAnalyzing(true);
     setError(false);
+    setNeedsState(false);
+    setSelectedState(null);
+    setConfirmedState(null);
+    setShowStatePicker(false);
+
     try {
       const analysis = await analyzeLegalQuery(query);
       setResult(analysis);
@@ -96,13 +207,18 @@ const AIDemo: React.FC = () => {
         return;
       }
 
-      const categoryLower = analysis.category.toLowerCase();
-      const exact = LAWYERS.filter(l =>
-        l.specialty.toLowerCase().includes(categoryLower) ||
-        categoryLower.includes(l.specialty.toLowerCase())
-      );
-      const onlineFirst = [...exact].sort((a, b) => (b.online ? 1 : 0) - (a.online ? 1 : 0));
-      setMatchedLawyers(onlineFirst.length > 0 ? onlineFirst.slice(0, 3) : LAWYERS.filter(l => l.online).slice(0, 2));
+      // Check if we have a usable state
+      const stateAbbr = getStateAbbr(analysis.state);
+
+      if (!stateAbbr) {
+        // No state detected — ask the user
+        setNeedsState(true);
+        setShowStatePicker(true);
+        return;
+      }
+
+      setConfirmedState(stateAbbr);
+      await loadLawyers(analysis.category, stateAbbr);
     } catch (err) {
       console.error(err);
       setError(true);
@@ -111,12 +227,38 @@ const AIDemo: React.FC = () => {
     }
   };
 
+  // When user confirms a state from the picker
+  const handleStateConfirm = async (stateAbbr: string) => {
+    setSelectedState(stateAbbr);
+    setConfirmedState(stateAbbr);
+    setShowStatePicker(false);
+    setNeedsState(false);
+
+    // Update the result display
+    if (result) {
+      setResult({ ...result, state: getStateName(stateAbbr) });
+    }
+
+    await loadLawyers(result?.category || '', stateAbbr);
+  };
+
   const resetDemo = () => {
     setResult(null);
     setQuery('');
     setError(false);
     setMatchedLawyers([]);
+    setNeedsState(false);
+    setShowStatePicker(false);
+    setSelectedState(null);
+    setConfirmedState(null);
+    setStateSearch('');
+    if (isListening) stopListening();
   };
+
+  const filteredStates = US_STATES.filter(s =>
+    s.label.toLowerCase().includes(stateSearch.toLowerCase()) ||
+    s.value.toLowerCase().includes(stateSearch.toLowerCase())
+  );
 
   return (
     <div className="max-w-5xl mx-auto perspective-1000">
@@ -143,6 +285,7 @@ const AIDemo: React.FC = () => {
       >
         <AnimatePresence mode="wait">
           {!result && !error ? (
+            /* ── INPUT PHASE ── */
             <motion.div
               key="input"
               initial={{ opacity: 0, x: -20 }}
@@ -158,16 +301,71 @@ const AIDemo: React.FC = () => {
                     <span>Confidential & Encrypted</span>
                   </div>
                 </div>
-                <textarea
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Example: My landlord in New York is refusing to return my $2,400 security deposit after I moved out three weeks ago. The apartment was left in good condition and I have photos to prove it..."
-                  className="w-full h-48 p-8 bg-slate-50 border border-slate-200 rounded-[2rem] focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none text-lg text-slate-800 placeholder:text-slate-400 resize-none leading-relaxed"
-                />
+
+                {/* Textarea with voice button */}
+                <div className="relative">
+                  <textarea
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Example: My landlord in New York is refusing to return my $2,400 security deposit after I moved out three weeks ago. The apartment was left in good condition and I have photos to prove it..."
+                    className="w-full h-48 p-8 pr-16 bg-slate-50 border border-slate-200 rounded-[2rem] focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none text-lg text-slate-800 placeholder:text-slate-400 resize-none leading-relaxed"
+                  />
+
+                  {/* Voice input button */}
+                  {speechSupported && (
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={toggleVoice}
+                      className={`absolute top-4 right-4 w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-md ${
+                        isListening
+                          ? 'bg-rose-500 text-white shadow-rose-200 animate-pulse'
+                          : 'bg-white text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200'
+                      }`}
+                      title={isListening ? 'Stop recording' : 'Speak your legal issue'}
+                    >
+                      {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                    </motion.button>
+                  )}
+                </div>
+
+                {/* Voice indicator */}
+                <AnimatePresence>
+                  {isListening && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex items-center space-x-3 bg-rose-50 border border-rose-100 rounded-2xl px-5 py-3"
+                    >
+                      <div className="flex space-x-1">
+                        <div className="w-1.5 h-4 bg-rose-400 rounded-full animate-[pulse_0.8s_ease-in-out_infinite]"></div>
+                        <div className="w-1.5 h-6 bg-rose-500 rounded-full animate-[pulse_0.8s_ease-in-out_infinite_0.2s]"></div>
+                        <div className="w-1.5 h-3 bg-rose-400 rounded-full animate-[pulse_0.8s_ease-in-out_infinite_0.4s]"></div>
+                        <div className="w-1.5 h-5 bg-rose-500 rounded-full animate-[pulse_0.8s_ease-in-out_infinite_0.6s]"></div>
+                      </div>
+                      <span className="text-sm font-semibold text-rose-600">Listening... Speak your legal issue clearly</span>
+                      <button
+                        onClick={stopListening}
+                        className="ml-auto text-rose-400 hover:text-rose-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-slate-400">
-                    Try: landlord disputes, custody questions, contract reviews, immigration status, workplace issues
-                  </p>
+                  <div className="flex items-center space-x-3">
+                    <p className="text-xs text-slate-400">
+                      Try: landlord disputes, custody questions, contract reviews, immigration status, workplace issues
+                    </p>
+                    {speechSupported && !isListening && (
+                      <span className="text-xs text-indigo-400 font-medium hidden sm:inline">
+                        or click <Mic className="w-3 h-3 inline" /> to speak
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-400">{query.length > 0 ? `${query.length} characters` : ''}</p>
                 </div>
                 <motion.button
@@ -192,6 +390,7 @@ const AIDemo: React.FC = () => {
               </div>
             </motion.div>
           ) : error ? (
+            /* ── ERROR ── */
             <motion.div
               key="error"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -217,6 +416,7 @@ const AIDemo: React.FC = () => {
               </div>
             </motion.div>
           ) : isNotRecognized ? (
+            /* ── NOT RECOGNIZED ── */
             <motion.div
               key="not-recognized"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -251,7 +451,101 @@ const AIDemo: React.FC = () => {
                 </motion.button>
               </div>
             </motion.div>
+          ) : showStatePicker ? (
+            /* ── STATE PICKER ── */
+            <motion.div
+              key="state-picker"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              className="p-8 md:p-14"
+            >
+              <div className="max-w-lg mx-auto space-y-6">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MapPin className="w-8 h-8 text-indigo-600" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-900 mb-2">Which state are you in?</h3>
+                  <p className="text-slate-500 text-sm">
+                    We couldn't detect your state from the description. Select your state so we can match you with licensed attorneys in your jurisdiction.
+                  </p>
+                </div>
+
+                {/* AI Summary preview */}
+                <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <CheckCircle className="w-4 h-4 text-emerald-500" />
+                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Issue Identified</span>
+                  </div>
+                  <p className="text-slate-700 text-sm">{result!.shortSummary}</p>
+                  <div className="flex items-center space-x-3 mt-2">
+                    <span className="text-xs font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full">{result!.category}</span>
+                    <span className="text-xs font-bold text-slate-500 bg-white px-2 py-0.5 rounded-full">{result!.urgency} urgency</span>
+                  </div>
+                </div>
+
+                {/* Search box */}
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <input
+                    type="text"
+                    value={stateSearch}
+                    onChange={(e) => setStateSearch(e.target.value)}
+                    placeholder="Search states..."
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none text-sm text-slate-800 placeholder:text-slate-400"
+                  />
+                </div>
+
+                {/* States grid */}
+                <div className="max-h-64 overflow-y-auto rounded-2xl border border-slate-100 bg-slate-50 p-2">
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {filteredStates.map((state) => (
+                      <button
+                        key={state.value}
+                        onClick={() => setSelectedState(state.value)}
+                        className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                          selectedState === state.value
+                            ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                            : 'bg-white text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 border border-slate-100'
+                        }`}
+                      >
+                        <span>{state.label}</span>
+                        <span className={`text-xs ${selectedState === state.value ? 'text-indigo-200' : 'text-slate-400'}`}>
+                          {state.value}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  {filteredStates.length === 0 && (
+                    <p className="text-center text-slate-400 text-sm py-8">No states found for "{stateSearch}"</p>
+                  )}
+                </div>
+
+                {/* Confirm */}
+                <div className="flex items-center space-x-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={resetDemo}
+                    className="px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-xl transition-colors"
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: selectedState ? 1.02 : 1 }}
+                    whileTap={{ scale: selectedState ? 0.98 : 1 }}
+                    onClick={() => selectedState && handleStateConfirm(selectedState)}
+                    disabled={!selectedState}
+                    className="flex-1 py-3.5 bg-indigo-600 text-white rounded-xl font-bold text-base hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center space-x-2 shadow-lg shadow-indigo-100"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    <span>{selectedState ? `Continue with ${getStateName(selectedState)}` : 'Select a state'}</span>
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
           ) : (
+            /* ── RESULTS ── */
             <motion.div
               key="results"
               initial={{ opacity: 0, scale: 0.95 }}
@@ -296,7 +590,7 @@ const AIDemo: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
                 {[
                   { label: "Legal Category", val: result!.category, color: "text-slate-900" },
-                  { label: "Jurisdiction", val: result!.state, color: "text-slate-900" },
+                  { label: "Jurisdiction", val: confirmedState ? `${result!.state} (${confirmedState})` : result!.state, color: "text-slate-900" },
                   {
                     label: "Urgency Level",
                     val: result!.urgency,
@@ -324,68 +618,102 @@ const AIDemo: React.FC = () => {
                   </h4>
                   <p className="text-xs text-slate-400 font-medium">Sorted by availability</p>
                 </div>
-                <div className="space-y-4">
-                  {matchedLawyers.map((lawyer, i) => (
-                    <motion.div
-                      key={lawyer.id}
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 + (i * 0.1) }}
-                      whileHover={{ scale: 1.01, translateY: -2 }}
-                      className="flex flex-col md:flex-row md:items-center p-6 rounded-2xl border border-slate-100 bg-white hover:border-indigo-200 hover:shadow-xl transition-all cursor-pointer group gap-5"
-                    >
-                      {/* Avatar with initials */}
-                      <div className="flex items-center space-x-4 flex-shrink-0">
-                        <div className={`w-14 h-14 ${INITIALS_COLORS[parseInt(lawyer.id) - 1] || 'bg-indigo-600'} rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-md`}>
-                          {lawyer.initials}
+
+                {fetchingLawyers ? (
+                  <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                    <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+                    <p className="text-slate-500 font-medium">Finding attorneys in your area...</p>
+                  </div>
+                ) : matchedLawyers.length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-12 bg-slate-50 rounded-2xl border border-slate-100"
+                  >
+                    <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-500 font-medium mb-1">No attorneys available right now</p>
+                    <p className="text-slate-400 text-sm">Try downloading the app for broader availability and instant notifications.</p>
+                  </motion.div>
+                ) : (
+                  <div className="space-y-4">
+                    {matchedLawyers.map((lawyer, i) => (
+                      <motion.div
+                        key={lawyer.id}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 + (i * 0.1) }}
+                        whileHover={{ scale: 1.01, translateY: -2 }}
+                        className="flex flex-col md:flex-row md:items-center p-6 rounded-2xl border border-slate-100 bg-white hover:border-indigo-200 hover:shadow-xl transition-all cursor-pointer group gap-5"
+                      >
+                        {/* Avatar */}
+                        <div className="flex items-center space-x-4 flex-shrink-0">
+                          {lawyer.profilePhoto ? (
+                            <img
+                              src={lawyer.profilePhoto}
+                              alt={lawyer.name}
+                              className="w-14 h-14 rounded-2xl object-cover shadow-md"
+                            />
+                          ) : (
+                            <div className={`w-14 h-14 ${INITIALS_COLORS[i % INITIALS_COLORS.length]} rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-md`}>
+                              {lawyer.initials}
+                            </div>
+                          )}
+                          <div className="md:hidden">
+                            <div className="flex items-center space-x-2">
+                              <p className="font-bold text-slate-900">{lawyer.name}</p>
+                              {lawyer.online && (
+                                <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
+                              )}
+                              {lawyer.verified && (
+                                <CheckCircle className="w-4 h-4 text-blue-500" />
+                              )}
+                            </div>
+                            <p className="text-sm text-slate-500">{lawyer.title}</p>
+                          </div>
                         </div>
-                        <div className="md:hidden">
-                          <div className="flex items-center space-x-2">
+
+                        {/* Info */}
+                        <div className="flex-grow min-w-0">
+                          <div className="hidden md:flex items-center space-x-2 mb-1">
                             <p className="font-bold text-slate-900">{lawyer.name}</p>
                             {lawyer.online && (
                               <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
                             )}
+                            {lawyer.verified && (
+                              <CheckCircle className="w-4 h-4 text-blue-500" />
+                            )}
                           </div>
-                          <p className="text-sm text-slate-500">{lawyer.title}</p>
+                          <p className="hidden md:block text-sm text-slate-500 font-medium mb-2">
+                            {lawyer.title} &middot; {lawyer.yearsExperience} yrs experience &middot; Bar #{lawyer.barNumber}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                            <span className="flex items-center space-x-1">
+                              <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                              <span className="font-bold text-slate-700">{lawyer.rating.toFixed(1)}</span>
+                              <span>({lawyer.reviews} reviews)</span>
+                            </span>
+                            <span className="hidden sm:inline text-slate-200">|</span>
+                            <span className="flex items-center space-x-1">
+                              <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                              <span>{lawyer.online ? 'Available now' : 'Offline'}</span>
+                            </span>
+                            <span className="hidden sm:inline text-slate-200">|</span>
+                            <span className="flex items-center space-x-1">
+                              <Globe className="w-3.5 h-3.5 text-indigo-400" />
+                              <span>{lawyer.languages.join(', ')}</span>
+                            </span>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Info */}
-                      <div className="flex-grow min-w-0">
-                        <div className="hidden md:flex items-center space-x-2 mb-1">
-                          <p className="font-bold text-slate-900">{lawyer.name}</p>
-                          {lawyer.online && (
-                            <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]"></div>
-                          )}
+                        {/* CTA */}
+                        <div className="flex flex-col items-end flex-shrink-0 space-y-1.5">
+                          <span className="text-sm font-bold text-slate-900">{lawyer.consultationRate}</span>
+                          <span className="text-xs text-indigo-600 font-semibold group-hover:underline">Start Consultation &rarr;</span>
                         </div>
-                        <p className="hidden md:block text-sm text-slate-500 font-medium mb-2">{lawyer.title} &middot; {lawyer.yearsExperience} yrs experience &middot; Bar #{lawyer.barNumber}</p>
-                        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                          <span className="flex items-center space-x-1">
-                            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                            <span className="font-bold text-slate-700">{lawyer.rating}</span>
-                            <span>({lawyer.reviews} reviews)</span>
-                          </span>
-                          <span className="hidden sm:inline text-slate-200">|</span>
-                          <span className="flex items-center space-x-1">
-                            <Clock className="w-3.5 h-3.5 text-indigo-400" />
-                            <span>{lawyer.responseTime}</span>
-                          </span>
-                          <span className="hidden sm:inline text-slate-200">|</span>
-                          <span className="flex items-center space-x-1">
-                            <Globe className="w-3.5 h-3.5 text-indigo-400" />
-                            <span>{lawyer.languages.join(', ')}</span>
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* CTA */}
-                      <div className="flex flex-col items-end flex-shrink-0 space-y-1.5">
-                        <span className="text-sm font-bold text-slate-900">{lawyer.consultationRate}</span>
-                        <span className="text-xs text-indigo-600 font-semibold group-hover:underline">Start Consultation &rarr;</span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
 
                 <div className="mt-10 flex flex-col items-center">
                   <p className="text-center text-slate-400 text-sm mb-6 font-medium">

@@ -31,7 +31,7 @@ const Header: React.FC = () => {
     <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-2 cursor-pointer" onClick={() => setMobileOpen(false)}>
-          <img src="assets/logo.png" alt="LawyerDirect Logo" className="h-10 w-auto" />
+          <img src="/logo.png" alt="LawyerDirect Logo" className="h-10 w-auto" />
           <span className="text-xl font-bold tracking-tight text-slate-800">Lawyer<span className="text-indigo-600">Direct</span></span>
         </Link>
 
