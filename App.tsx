@@ -1,6 +1,7 @@
 
-import React from 'react';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { trackVisit } from './services/tracking';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Features from './components/Features';
@@ -88,9 +89,18 @@ const LandingPage: React.FC = () => {
   );
 };
 
+function PageTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    trackVisit(location.pathname);
+  }, [location.pathname]);
+  return null;
+}
+
 const App: React.FC = () => {
   return (
     <Router>
+      <PageTracker />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/legal-disclaimer" element={<LegalDisclaimer />} />
