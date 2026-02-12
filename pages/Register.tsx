@@ -42,7 +42,7 @@ const COURT_LEVEL_OPTIONS = [
 ];
 
 type Role = 'CLIENT' | 'LAWYER';
-type FormStep = 'personal' | 'emailVerify' | 'phoneVerify' | 'professional' | 'success';
+type FormStep = 'personal' | 'emailVerify' | 'phoneVerify' | 'professional' | 'identity' | 'success';
 
 interface EducationEntry { institution: string; degree: string; year: string; }
 interface FirmEntry { name: string; role: string; years: string; }
@@ -70,16 +70,14 @@ const Register: React.FC = () => {
   const [step, setStep] = useState<FormStep>('personal');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   // Personal fields
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
+
+  // Identity verification
+  const [consentChecked, setConsentChecked] = useState(false);
 
   // Email verification
   const [emailSending, setEmailSending] = useState(false);
@@ -556,10 +554,11 @@ const Register: React.FC = () => {
     if (!lastName.trim()) { setError('Last name is required'); return false; }
     if (!email.trim()) { setError('Email is required'); return false; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('Please enter a valid email'); return false; }
-    if (password.length < 8) { setError('Password must be at least 8 characters'); return false; }
-    if (password !== confirmPassword) { setError('Passwords do not match'); return false; }
-    const phoneDigits = phone.replace(/\D/g, '');
-    if (!phoneDigits || phoneDigits.length < 10) { setError('A valid phone number is required'); return false; }
+    return true;
+  };
+
+  const validateIdentity = (): boolean => {
+    if (!consentChecked) { setError('You must agree to the terms to continue'); return false; }
     return true;
   };
 
@@ -579,6 +578,7 @@ const Register: React.FC = () => {
 
   const handleSubmit = async () => {
     if (role === 'LAWYER' && !validateProfessional()) return;
+    if (role === 'LAWYER' && !validateIdentity()) return;
     setIsSubmitting(true);
     setError('');
     const phoneDigits = phone.replace(/\D/g, '');
@@ -588,7 +588,7 @@ const Register: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           role, firstName: firstName.trim(), lastName: lastName.trim(),
-          email: email.trim().toLowerCase(), password,
+          email: email.trim().toLowerCase(),
           phone: phoneDigits ? `+1${phoneDigits}` : undefined,
           ...(role === 'LAWYER' && {
             title: profileData.title.trim() || undefined,
