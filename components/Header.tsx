@@ -25,6 +25,7 @@ const Header: React.FC = () => {
     { label: 'How it Works', id: 'how-it-works' },
     { label: 'FAQ', id: 'faq' },
     { label: 'Contact', id: 'contact' },
+    { label: 'Careers', id: 'careers', isPage: true },
   ];
 
   return (
@@ -36,11 +37,17 @@ const Header: React.FC = () => {
         </Link>
 
         <nav aria-label="Main navigation" className="hidden md:flex items-center space-x-8">
-          {navLinks.map(link => (
-            <button key={link.id} onClick={() => scrollTo(link.id)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">
-              {link.label}
-            </button>
-          ))}
+          {navLinks.map(link =>
+            'isPage' in link && link.isPage ? (
+              <Link key={link.id} to={`/${link.id}`} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">
+                {link.label}
+              </Link>
+            ) : (
+              <button key={link.id} onClick={() => scrollTo(link.id)} className="text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors">
+                {link.label}
+              </button>
+            )
+          )}
           <Link
             to="/register"
             className="bg-indigo-600 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
@@ -62,15 +69,26 @@ const Header: React.FC = () => {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden bg-white border-t border-slate-100 px-6 pb-6 pt-4 space-y-1">
-          {navLinks.map(link => (
-            <button
-              key={link.id}
-              onClick={() => scrollTo(link.id)}
-              className="block w-full text-left px-4 py-3 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors"
-            >
-              {link.label}
-            </button>
-          ))}
+          {navLinks.map(link =>
+            'isPage' in link && link.isPage ? (
+              <Link
+                key={link.id}
+                to={`/${link.id}`}
+                onClick={() => setMobileOpen(false)}
+                className="block w-full text-left px-4 py-3 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors"
+              >
+                {link.label}
+              </Link>
+            ) : (
+              <button
+                key={link.id}
+                onClick={() => scrollTo(link.id)}
+                className="block w-full text-left px-4 py-3 text-sm font-medium text-slate-600 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors"
+              >
+                {link.label}
+              </button>
+            )
+          )}
           <div className="pt-3">
             <Link
               to="/register"

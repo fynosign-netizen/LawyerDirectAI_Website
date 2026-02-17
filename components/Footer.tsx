@@ -50,6 +50,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-4 text-sm">
               <li onClick={() => scrollTo('vision')} className="hover:text-white transition-colors cursor-pointer">Vision</li>
               <li onClick={() => scrollTo('contact')} className="hover:text-white transition-colors cursor-pointer">About Us</li>
+              <li><Link to="/careers" className="hover:text-white transition-colors">Careers</Link></li>
               <li><Link to="/legal-disclaimer" className="hover:text-white transition-colors">Legal Disclaimer</Link></li>
               <li><Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
             </ul>

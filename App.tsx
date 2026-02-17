@@ -19,6 +19,7 @@ import Pricing from './components/Pricing';
 import LegalDisclaimer from './pages/LegalDisclaimer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Register from './pages/Register';
+import Careers from './pages/Careers';
 
 const LandingPage: React.FC = () => {
   return (
@@ -106,6 +107,7 @@ const App: React.FC = () => {
         <Route path="/legal-disclaimer" element={<LegalDisclaimer />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/careers" element={<Careers />} />
       </Routes>
     </Router>
   );
