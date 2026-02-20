@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { analyzeLegalQuery } from '../services/gemini';
+import { analyzeLegalQuery } from '../services/openai';
 import { fetchMatchedLawyers, ApiLawyer } from '../services/api';
 import { AnalysisResult, Lawyer, US_STATES, getStateAbbr, getStateName } from '../types';
 import {

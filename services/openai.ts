@@ -1,13 +1,21 @@
-
-import { GoogleGenAI, Type } from "@google/genai";
 import { AnalysisResult } from "../types";
 
 export const analyzeLegalQuery = async (query: string): Promise<AnalysisResult> => {
-  const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
-  
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: `You are a legal intake assistant for Lawyer Direct, a platform connecting people with lawyers across the US and Canada.
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-5.2",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "user",
+          content: `You are a legal intake assistant for Lawyer Direct, a platform connecting people with lawyers across the US and Canada.
 
 Analyze the following user query and extract:
 1. **category**: The most relevant legal category (e.g., Family Law, Immigration, Criminal Defense, Contract Law, Real Estate, Personal Injury, Employment Law, Intellectual Property, Estate Planning, General Inquiry).
@@ -21,22 +29,20 @@ IMPORTANT — If the query is gibberish, random characters, nonsensical, or not 
 - urgency: "Low"
 - shortSummary: "We couldn't identify a legal issue from your input. Please describe your situation in a few sentences so we can match you with the right lawyer."
 
+Return ONLY valid JSON with these four fields: category, state, urgency, shortSummary.
+
 Query: "${query}"`,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          category: { type: Type.STRING, description: "Legal category, or 'Not Recognized' if query is gibberish/nonsensical" },
-          state: { type: Type.STRING, description: "US state or Canadian province, or 'Nationwide' if undetermined" },
-          urgency: { type: Type.STRING, description: "Low, Medium, or High", enum: ["Low", "Medium", "High"] },
-          shortSummary: { type: Type.STRING, description: "One sentence summary of the issue." }
         },
-        required: ["category", "state", "urgency", "shortSummary"]
-      }
-    }
+      ],
+      max_completion_tokens: 300,
+    }),
   });
 
-  const result = JSON.parse(response.text.trim());
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const result = JSON.parse(data.choices[0].message.content.trim());
   return result as AnalysisResult;
 };
